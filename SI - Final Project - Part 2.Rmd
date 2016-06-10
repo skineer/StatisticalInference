@@ -1,0 +1,69 @@
+---
+output: html_document
+---
+Statistical Inference Project - Part 2
+===============================================================================  
+###by Renato Pedroso Neto 
+
+##Overview  
+This part of the project aims to analyse the toothgrowth dataset, provided by R base packages, making hypothesis testings and assumptions about possible correlations.  
+
+First we need to load the toothgrowth data and make some basic exploratory analysis:
+```{r, warning=FALSE}
+library(ggplot2, quietly = TRUE)
+library(dplyr, quietly = TRUE, warn.conflicts = FALSE)
+data("ToothGrowth")
+# transform the dose in factor variable
+ToothGrowth <- mutate(ToothGrowth, dose = as.factor(dose))
+str(ToothGrowth)
+
+# basic exploratory analysis. Any NA values?
+sum(complete.cases(ToothGrowth))
+# No NA values!
+```
+We can take a look at basic summary of the data as well:
+```{r}
+summary(ToothGrowth)
+head(ToothGrowth, n = 3)
+
+# Whats is the behavior of supp and len?
+ggplot(ToothGrowth, aes(x = supp, y = len)) + geom_boxplot(aes(fill=supp))
+
+# Whats is behavior of dose and len?
+ggplot(ToothGrowth, aes(x = dose, y = len)) + geom_boxplot(aes(fill=dose))
+```
+
+With the preliminaries graphs we could have a sense of behavior of all the variables. Let's start to create some hypothesis:  
+
+**Null Hypothesis 1 - ** The supplement type (orange juice or vitamin c as ascorbic acid) has **NO** effect on tooth growth.  
+**Alternative Hyphotesis 1 - ** The supplement type has effect on tooth growth.  
+
+We can test this hypotheses with the Student's T-Test:  
+```{r}
+t.test(ToothGrowth$len ~ ToothGrowth$supp, paired = FALSE)
+```
+
+As we can see we **FAILED** to reject the null hypothesis due to the high p-value, 0.06, and the confidence interval.  
+
+We can test the hypothesis including the dose variable:
+
+**Null Hypothesis 2 - ** The dose of vitamin C has **NO** effect on tooth growth  
+**Alternative Hyphotesis 2 - ** The dose of vitamin c has effect on tooth growth
+
+```{r}
+# Separate the doses in groups of two in order to make the t.test
+dose_g1 <- subset(ToothGrowth, dose %in% c(0.5,1))
+dose_g2 <- subset(ToothGrowth, dose %in% c(1,2))
+dose_g3 <- subset(ToothGrowth, dose %in% c(0.5,2))
+
+t.test(len ~ dose, data = dose_g1)
+t.test(len ~ dose, data = dose_g2)
+t.test(len ~ dose, data = dose_g3)
+```
+With this t-test we **SUCCESSFULLY** accepted the alternative hypothesis due to the confidence interval and low p-values (under 0.05).
+
+##Conclusions and Assumptions  
+As we could see, in the previous studies, we can conclude that supplement type of vitamin c has **no** effect on tooth growth and a diet rich in vitamin c by itself **does** help in tooth growth. As the dosage increases the tooth length increases too.  
+
+To make this study we have the assumption of the data to be not paired and with different variances.  
+To make the inference about the population we are assuming that this sample is enough.
